@@ -19,28 +19,25 @@ public:
 	virtual ~Base() = default;
 };
 
-class A : public Base {
+template <typename Derived>
+class Visitable : public Base {
 public:
 	void accept(Visitor & v) final
 	{
-		v.visit(*this);
+		v.visit(static_cast<Derived &>(*this));
 	}
 };
 
-class B : public Base {
+class A : public Visitable<A> {
 public:
-	void accept(Visitor & v) final
-	{
-		v.visit(*this);
-	}
 };
 
-class C : public Base {
+class B : public Visitable<B> {
 public:
-	void accept(Visitor & v) final
-	{
-		v.visit(*this);
-	}
+};
+
+class C : public Visitable<C> {
+public:
 };
 
 #include <iostream>
