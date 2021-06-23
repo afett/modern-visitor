@@ -19,8 +19,8 @@ public:
 	virtual ~Base() = default;
 };
 
-template <typename Derived>
-class Visitable : public Base {
+template <typename Derived, typename Concrete>
+class Visitable : public Concrete {
 public:
 	void accept(Visitor & v) final
 	{
@@ -28,15 +28,15 @@ public:
 	}
 };
 
-class A : public Visitable<A> {
+class A : public Visitable<A, Base> {
 public:
 };
 
-class B : public Visitable<B> {
+class B : public Visitable<B, Base> {
 public:
 };
 
-class C : public Visitable<C> {
+class C : public Visitable<C, Base> {
 public:
 };
 
