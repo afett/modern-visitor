@@ -1,42 +1,51 @@
 
-class A;
-class B;
-class C;
+template <typename ...Types> class Visitor;
 
-class Visitor {
+// class Visitor<T4> {};
+// class Visitor<T3, T4> : public Visitor<T4> {};
+// class Visitor<T2, T3, T4> : public Visitor<T3, T4> {};
+// class Visitor<T1, T2, T3, T4> : public Visitor<T2, T3, T4> {};
+
+template <typename T>
+class Visitor<T> {
 public:
-	virtual void visit(A &) = 0;
-	virtual void visit(B &) = 0;
-	virtual void visit(C &) = 0;
-
-	virtual ~Visitor() = default;
+	virtual void visit(T &) = 0;
+	virtual ~Visitor() = default; // End of recursion, this is the base class
 };
 
-
-class Base {
+template <typename T, typename ...Types>
+class Visitor<T, Types...>  : public Visitor<Types...> {
 public:
-	virtual void accept(Visitor &) = 0;
-	virtual ~Base() = default;
+	using Visitor<Types...>::visit; // ... makes visit from base classes available for overload resolution
+	virtual void visit(T &) = 0;
 };
 
-template <typename Derived, typename Concrete>
-class Visitable : public Concrete {
+template <typename Derived, typename Base>
+class Visitable : public Base {
 public:
-	void accept(Visitor & v) final
+	void accept(typename Base::VisitorType & v) final
 	{
 		v.visit(static_cast<Derived &>(*this));
 	}
 };
 
-class A : public Visitable<A, Base> {
+class ABC {
+public:
+	using VisitorType = Visitor<class A, class B, class C>; // using "class" here is a forward declaration
+
+	virtual void accept(VisitorType &) = 0;
+	virtual ~ABC() = default;
+};
+
+class A : public Visitable<A, ABC> {
 public:
 };
 
-class B : public Visitable<B, Base> {
+class B : public Visitable<B, ABC> {
 public:
 };
 
-class C : public Visitable<C, Base> {
+class C : public Visitable<C, ABC> {
 public:
 };
 
@@ -44,7 +53,7 @@ public:
 #include <vector>
 #include <memory>
 
-class FooVisitor : public Visitor {
+class FooVisitor : public ABC::VisitorType {
 public:
 	void visit(A &) override
 	{
@@ -65,7 +74,7 @@ public:
 int main()
 {
 
-	std::vector<std::unique_ptr<Base>> v;
+	std::vector<std::unique_ptr<ABC>> v;
 	v.emplace_back(new A{});
 	v.emplace_back(new A{});
 	v.emplace_back(new B{});
